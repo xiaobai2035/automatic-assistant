@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>notify</title>
+    <style>
+      .notify-wrapper {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+      }
+      h4 {
+        height: 20px;
+
+        font-weight: bold;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        color: orange;
+      }
+
+      .content {
+        width: 96%;
+        padding: 5px;
+        min-height: 30px;
+        background: rgb(235, 235, 235);
+        margin-bottom: 15px;
+        margin-top: 5px;
+        line-height: 20px;
+        border-bottom: 1px solid silver;
+      }
+
+      .message {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        outline: none;
+        color: #008c8c;
+        position: fixed;
+        right: 10px;
+        top: 10px;
+        z-index: 9999;
+        cursor: pointer;
+      }
+      .notify-img {
+        max-width: 255px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="notify-wrapper">
+      <button id="notify-close" class="close-btn">close</button>
+      <h4 id="notify-name"></h4>
+      <div class="content" id="notify-content"></div>
+      <div id="ring-wrap" style="display: none">
+      </div>
+    </div>
+  </body>
+  <script>
+    const ipcRenderer = require("electron").ipcRenderer;
+
+    ipcRenderer.on("excute-notify", (e, arg) => {
+      document.getElementById("notify-name").innerText = arg.name;
+      let content = "";
+      if (arg.content.includes("data:image/png;base64")) {
+        content = '<img class="notify-img" src="' + arg.content + '" alt="" />';
+      } else {
+        content = '<p class="message">'+ arg.content +'</p>';
+      }
+      document.getElementById("notify-content").innerHTML = content;
+      if (arg.ring) {
+        document.getElementById("ring-wrap").innerHTML = '<audio id="ring" controls loop><source src="'+arg.ring+'" type="audio/mpeg" /></audio>'
+        let ring = document.getElementById("ring");
+        ring.currentTime = 0;
+        ring.play();
+        setTimeout(() => {
+          ring.pause();
+        }, 30000);
+      }
+    });
+
+    document.getElementById("notify-close").onclick = function () {
+      ipcRenderer.sendSync("closeNotifyWindow", {});
+    };
+  </script>
+</html>
